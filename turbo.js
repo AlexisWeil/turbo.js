@@ -124,56 +124,67 @@
             data: params
         }).done(function(datas) {
 
-                form.trigger('ajax-success', datas);
-            }).fail(function(datas) {
+            form.trigger('ajax-success', datas);
+        }).fail(function(req) {
 
-                for(var key in datas) {
-                    if(key === 'execute') {
-                        window.Turbo.execute(datas.execute);
-                    }
-                    else if(key === 'errors' && (showErrors === 'showErrors' || showErrors === true)) {
-                        for(var id in datas.errors) {
-                            if(id === 'global') {
-                                var globalErrorClassTo = form.attr('globalErrorClassTo');
-                                var globalErrorMessageTo = form.attr('globalErrorMessageTo');
+            var errors = req.responseJSON;
 
-                                if(globalErrorClassTo !== undefined)
-                                    $(globalErrorMessageTo).addClass(window.Turbo.errorClass);
-                                else
-                                    form.addClass(window.Turbo.errorClass);
+            for(var key in errors) {
+                if(key === 'execute') {
+                    window.Turbo.execute(errors.execute);
+                }
+                else if(key === 'errors' && (showErrors === 'showErrors' || showErrors === true)) {
+                    for(var id in errors.errors) {
+                        if(id === 'global') {
+                            var globalErrorClassTo = form.attr('globalErrorClassTo');
+                            var globalErrorMessageTo = form.attr('globalErrorMessageTo');
 
+                            if(globalErrorClassTo !== undefined)
+                                $(globalErrorClassTo).addClass(window.Turbo.errorClass);
+                            else
+                                form.addClass(window.Turbo.errorClass);
 
-                            }
+                            if(globalErrorMessageTo !== undefined)
+                                $(globalErrorMessageTo).text(errors.errors[id]);
                             else {
-                                $('[name=' + id + ']').each(function(i, elem) {
-                                    if(elem.attr('showErrors') !== undefined || elem.attr('showErrors') === true) {
-                                        var errorClassTo = elem.attr('errorClassTo');
-                                        var errorMessageTo = elem.attr('errorMessageTo');
-
-                                        if(errorClassTo !== undefined)
-                                            $(errorClassTo).addClass(window.Turbo.errorClass);
-                                        else
-                                            elem.addClass(window.Turbo.errorClass);
-
-                                        if(errorMessageTo !== undefined)
-                                            $(errorMessageTo).text(datas.errors[id]);
-                                        else {
-                                            if($('.error-' + id).length > 0)
-                                                $('.error-' + id).text(datas.errors[id]);
-                                            else
-                                                elem.after('<div class="error-' + id + '">' + datas.errors[id] + '</div>');
-                                        }
-                                    }
-                                });
+                                if(form.find('.error-global').length > 0)
+                                    form.find('.error-global').text(errors.errors[id]);
+                                else
+                                    form.append('<div class="error-global">' + errors.errors[id] + '</div>');
                             }
+                        }
+                        else {
+                            $('[name=' + id + ']').each(function(i, elem) {
+                                elem = $(elem);
+
+                                if(elem.attr('showErrors') === undefined || elem.attr('showErrors') === true) {
+                                    var errorClassTo = elem.attr('errorClassTo');
+                                    var errorMessageTo = elem.attr('errorMessageTo');
+
+                                    if(errorClassTo !== undefined)
+                                        $(errorClassTo).addClass(window.Turbo.errorClass);
+                                    else
+                                        elem.addClass(window.Turbo.errorClass);
+
+                                    if(errorMessageTo !== undefined)
+                                        $(errorMessageTo).text(errors.errors[id]);
+                                    else {
+                                        if($('#error-' + id).length > 0)
+                                            $('#error-' + id).text(errors.errors[id]);
+                                        else
+                                            elem.after('<div id="error-' + id + '" class="error">' + errors.errors[id] + '</div>');
+                                    }
+                                }
+                            });
                         }
                     }
                 }
+            }
 
-                form.trigger('ajax-fail', datas);
-            }).always(function(datas) {
-                form.trigger('ajax-complete', datas);
-            });
+            form.trigger('ajax-fail', errors);
+        }).always(function(datas) {
+            form.trigger('ajax-complete', datas);
+        });
 
     }, 'submit');
 
