@@ -65,12 +65,10 @@
                 var functions = json.match(regex);
 
                 for(var f in functions) {
-                    var name = functions[f].match(/^[a-z]+/i)[0]
-                    var params = functions[f].match(new RegExp('^' + name + '\\((.*)\\)$'))[1];
+                    var func = functions[f].match(new RegExp('^([a-z]+)\\((.*)\\)$', 'i'));
+                    var args = eval('['+ func[2] + ']');
 
-                    var args = eval('['+ params + ']');
-
-                    this[name].apply(this, args);
+                    this[func[1]].apply(this, args);
                 }
             }
         }
@@ -123,6 +121,9 @@
             type: method,
             data: params
         }).done(function(datas) {
+
+            if(datas.execute !== undefined)
+                window.Turbo.execute(datas.execute)
 
             form.trigger('ajax-success', datas);
         }).fail(function(req) {
